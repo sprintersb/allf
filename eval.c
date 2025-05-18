@@ -46,7 +46,8 @@ int main (void)
                 printf ("not scanned: %s%s\n", line, nl);
             else
             {
-                if (l.y > m.y)
+                if (!isnanf (l.x)
+                    && (l.y > m.y || isnanf (m.x)))
                     m = l;
             }
         }

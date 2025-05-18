@@ -205,7 +205,7 @@ float get_minmax (float *px)
         d_mi = avrtest_fminf (d, d_mi);
 
         d = avrtest_fmaxf (d_ma, -d_mi);
-        if (avrtest_cmpf (d, mami) > 0)
+        if (avrtest_cmpf (d, mami) > 0 || cnt == 1)
         {
             mami = d;
             *px = x;
