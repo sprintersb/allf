@@ -59,6 +59,41 @@ static inline uint32_t ftou (float f)
     return u;
 }
 
+// Keeps order.
+static inline int32_t ftoi (float f)
+{
+    uint32_t u = ftou (f);
+    int32_t i;
+    if (u & 0x80000000)
+        u ^= 0x7fffffff;
+    __builtin_memcpy (&i, &u, 4);
+    return i;
+}
+
+// Keeps order.
+static inline float itof (int32_t i)
+{
+    uint32_t u = (uint32_t) i;
+    return utof ((u & 0x80000000) ? u ^ 0x7fffffff : u);
+}
+
+static float f_incr (float f, uint32_t inc)
+{
+    uint32_t base = (uint32_t) ftoi (f);
+    uint32_t next = base + inc;
+    int32_t ibase, inext, iinc;
+    // Saturate.
+    __builtin_memcpy (&ibase, &base, 4);
+    __builtin_memcpy (&inext, &next, 4);
+    __builtin_memcpy (&iinc, &inc, 4);
+    if (iinc > 0 && inext < ibase)
+        return utof (0x7fffffff);
+    if (iinc < 0 && inext > ibase)
+        return utof (0x80000000);
+    return itof (next);
+}
+
+
 static inline bool is_prefix (const char *pre, const char *s)
 {
     return 0 == strncmp (pre, s, strlen (pre));
@@ -106,8 +141,8 @@ static bool get_float (const char *arg, const char *prefix, float *pf)
         uint32_t add = strtoul (1 + pend, &pend2, 0);
         if (*pend2)
             error ("unrecognized float in %s\n", arg);
-        uint32_t fu = ftou (*pf);
-        *pf = utof (*pend == '+' ? fu + add : fu - add);
+
+        *pf = f_incr (*pf, *pend == '+' ? add : -add);
     }
 
     return true;
@@ -125,11 +160,6 @@ static float get_delta (float x)
     return avrtest_divf (d, y0);
 }
 
-static inline float f_incr (float x, uint32_t s)
-{
-    return utof (ftou (x) + s);
-}
-
 void show_time (float secs)
 {
 }
@@ -138,7 +168,8 @@ void show_expected_runtime (int n_loops)
 {
     uint32_t cyc = avrtest_cycles ();
 
-    uint32_t n_xs = (ftou (Hi) - ftou (Lo)) / Step + 1;
+    uint32_t n_xs = (uint32_t) ftoi (Hi) - (uint32_t) ftoi (Lo) + 1;
+    n_xs = n_xs / Step + 1;
     info ("%lu values = ", n_xs);
     n_xs = 1 + n_xs / Num;
     if (n_xs > 500000)
@@ -167,7 +198,7 @@ float get_minmax (float *px)
          avrtest_cmpf (x, Hi) <= 0;
          x = f_incr (x, inc))
     {
-        if (is_last() && cnt++ == 100)
+        if (cnt++ == 100 && is_last())
             show_expected_runtime (100);
         float d = get_delta (x);
         d_ma = avrtest_fmaxf (d, d_ma);
