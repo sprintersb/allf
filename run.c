@@ -247,7 +247,7 @@ int main (int argc, char *argv[])
     if (N == 0)
         info ("NUM=%d: [%e, %e] += 0x%lx\n", Num, Lo, Hi, Step);
 
-    float x = nan("");
+    float x = __builtin_nanf("");
     float mami = get_minmax (&x);
     printf ("== %d/%d: 0x%08lx: %e -> %e\n", N, Num, ftou(x), x, mami);
 
