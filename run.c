@@ -18,9 +18,9 @@ uint32_t Step = 1;
 #define FUNC logf
 #endif
 
-#define avrtest_(X) avrtest_##X
-#define AFUNC_(X) avrtest_(X)
-#define AFUNC AFUNC_(FUNC)
+#ifndef AFUNC
+#define AFUNC avrtest_logl
+#endif
 
 #define stringy_(X) #X
 #define stringy(X) stringy_(X)
@@ -150,14 +150,15 @@ static bool get_float (const char *arg, const char *prefix, float *pf)
 
 static float get_delta (float x)
 {
-    float y0 = AFUNC (x);
     float y = FUNC (x);
-    float ulp = avrtest_ulpf (y, y0);
+    long double y0 = AFUNC (avrtest_ftol (x));
+    long double yl = avrtest_ftol (y);
+    float ulp = avrtest_ulpf (y, avrtest_ltof (y0));
     if (avrtest_cmpf (ulp, 0) == 0)
         return 0;
 
-    float d = avrtest_subf (y, y0);
-    return avrtest_divf (d, y0);
+    long double d = avrtest_subl (yl, y0);
+    return avrtest_ltof (avrtest_divl (d, y0));
 }
 
 void show_time (float secs)
@@ -187,8 +188,8 @@ void show_expected_runtime (int n_loops)
 float get_minmax (float *px)
 {
     uint32_t inc = Step * Num;
-    float d_mi = +1000;
-    float d_ma = -1000;
+    float d_mi = 0;
+    float d_ma = 0;
     float mami = 0;
     uint32_t cnt = 0;
 
