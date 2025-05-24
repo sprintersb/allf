@@ -35,12 +35,12 @@ MCU=atmega128
 
 AVRTEST_HOME=$(shell dirname `which avrtest`)
 
-nums  := $(shell ./nums.sh $(NUM))
-afunc := $(shell ./afunc.sh $(FUNC))
+nums  := $(shell bash -c 'echo -n "$$(seq 0 $$(( '$(NUM)' - 1)) )"')
+afunc := $(shell bash -c 'echo -n avrtest_$${0::-1}l' $(FUNC))
 
 FLT = -Wl,-u,vfprintf -lprintf_flt
 
-$(info $(nums))
+$(info nums=$(nums))
 $(info AVRTEST_HOME=$(AVRTEST_HOME))
 
 elf = run.elf
@@ -48,8 +48,10 @@ dats := $(foreach num,$(nums),d-$(num).data)
 
 all: $(elf)
 
+exit_o := $(AVRTEST_HOME)/exit-$(MCU).o
+
 run.elf: run.c
-	$(CC) $< -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(AVRTEST_HOME)/exit-$(MCU).o $(FLT) -save-temps -dp -dumpbase "" -DFUNC=$(FUNC) -DAFUNC=avrtest_$(afunc)l $(ARGS)
+	$(CC) $< -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(exit_o) $(FLT) -save-temps -dp -dumpbase "" -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 
 d-%.data : run.elf
 	avrtest -q ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) $(XARGS) > $@
