@@ -6,9 +6,10 @@ help:
 	@echo "    NUM=[1]         Level of parallelization and number of jobs."
 	@echo "Specifying the function under investigation:"
 	@echo "    FUNC=[logf]     Float function to investigate."
-	@echo "    LO=[0.5]        Lower / upper bound for the x values. It's"
-	@echo "    HI=[1-1]        a float value with an optional ULP addend."
+	@echo "    LO=[0.5]        Lower / upper bound for the x values. A float"
+	@echo "    HI=[1-1]        value like inf with an optional ULP addend."
 	@echo "    STEP=[1]        Only each step-th x (ULP) will be investigated."
+	@echo "    OUT=[float]     Output format: float or ulp."
 	@echo "Specifying how the target program is compiled:"
 	@echo "    CC=[avr-gcc]    AVR compiler for the target program."
 	@echo "    MCU=[atmega128] AVR device under simulation."
@@ -27,6 +28,7 @@ FUNC=logf
 LO="0.5"
 HI="1-1"
 STEP=1
+OUT=float
 
 NUM=1
 
@@ -54,7 +56,7 @@ run.elf: run.c
 	$(CC) $< -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(exit_o) $(FLT) -save-temps -dp -dumpbase "" -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 
 d-%.data : run.elf
-	avrtest -q ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) $(XARGS) > $@
+	avrtest -q ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) -out=$(OUT) $(XARGS) > $@
 
 .PHONY: all-data
 

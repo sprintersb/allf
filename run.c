@@ -9,10 +9,13 @@
 
 #include "avrtest.h"
 
+enum { OUT_FLOAT, OUT_ULP };
+
 int N = 0;   // In [0, Num).
 int Num = 0; // Size of the cohort.
 float Lo = 0.5, Hi = 1.5;
 uint32_t Step = 1;
+int OutFormat = OUT_FLOAT;
 
 #ifndef FUNC
 #define FUNC logf
@@ -116,8 +119,9 @@ static bool get_u32 (const char *arg, const char *prefix, uint32_t *pi)
 {
     if (! is_prefix (prefix, arg))
         return false;
-    *pi = (uint32_t) atol (arg + strlen (prefix));
-    return true;
+    char *end;
+    *pi = strtoul (arg + strlen (prefix), &end, 0);
+    return *end == '\0';
 }
 
 /* Recognize sum of 2 terms: 1st is float, 2nd is ulong (float as bits).
@@ -148,6 +152,25 @@ static bool get_float (const char *arg, const char *prefix, float *pf)
     return true;
 }
 
+static bool get_out_format (const char *arg, const char *prefix, int *ofmt)
+{
+    if (! is_prefix (prefix, arg))
+        return false;
+
+    if (! strcasecmp (arg + strlen (prefix), "float"))
+    {
+        *ofmt = OUT_FLOAT;
+        return true;
+    }
+    if (! strcasecmp (arg + strlen (prefix), "ulp"))
+    {
+        *ofmt = OUT_ULP;
+        return true;
+    }
+
+    return false;
+}
+
 static float get_delta (float x)
 {
     float y = FUNC (x);
@@ -156,6 +179,9 @@ static float get_delta (float x)
     float ulp = avrtest_ulpf (y, avrtest_ltof (y0));
     if (avrtest_cmpf (ulp, 0) == 0)
         return 0;
+
+    if (OutFormat == OUT_ULP)
+        return ulp;
 
     long double d = avrtest_subl (yl, y0);
     return avrtest_ltof (avrtest_divl (d, y0));
@@ -211,6 +237,8 @@ float get_minmax (float *px)
             mami = d;
             *px = x;
         }
+        if (ftou (x) == 0x7fffffff)
+            break;
     }
 
     return mami;
@@ -234,16 +262,24 @@ int main (int argc, char *argv[])
             && ! get_int (argv[i], "-num=", &Num)
             && ! get_float (argv[i], "-lo=", &Lo)
             && ! get_float (argv[i], "-hi=", &Hi)
-            && ! get_u32 (argv[i], "-step=", &Step))
+            && ! get_u32 (argv[i], "-step=", &Step)
+            && ! get_out_format (argv[i], "-out=", &OutFormat))
         {
             error ("unknown option %s\n", argv[i]);
         }
     }
 
+    if (Num < 1 || Num > 1000)
+        error ("-num=%d must be in [1, 1000]", Num);
     if (N < 0 || N >= Num)
-        error ("N=%d not in [0, Num=%d)", N, Num);
+        error ("-n=%d not in [0, num=%d)", N, Num);
     if (Lo > Hi)
-        error ("Lo=%e > Hi=%e\n", Lo, Hi);
+        error ("lo=%e > hi=%e\n", Lo, Hi);
+    const uint32_t max_step = avrtest_divu32 (UINT32_MAX, Num);
+    if ((int32_t) Step <= 0)
+        error ("-step=%ld must be > 0", Step);
+    if (Step >= max_step)
+        error ("-step=%lu must be < %lu", max_step);
 
     if (N == 0)
         info ("NUM=%d: [%e, %e] += 0x%lx\n", Num, Lo, Hi, Step);
