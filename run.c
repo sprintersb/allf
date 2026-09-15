@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <avr/pgmspace.h>
 
 #include "avrtest.h"
 
@@ -286,7 +287,10 @@ int main (int argc, char *argv[])
 
     float x = __builtin_nanf("");
     float mami = get_minmax (&x);
-    printf ("== %d/%d: 0x%08lx: %e -> %e\n", N, Num, ftou(x), x, mami);
+    const char *fmt = OutFormat == OUT_ULP
+        ? PSTR ("== %d/%d: 0x%08lx: %e -> %.1f\n")
+        : PSTR ("== %d/%d: 0x%08lx: %e -> %e\n");
+    printf_P (fmt, N, Num, ftou(x), x, mami);
 
     return 0;
 }

@@ -71,7 +71,7 @@ eval.x: eval.c
 	gcc $< -O -o $@ -std=c99 -Wall -Werror -lm
 
 eval: eval.x all.data
-	cat all.data | ./eval.x
+	cat all.data | ./eval.x -out=$(OUT)
 
 clean:
 	rm -f $(wildcard *.[isox] *.data *.elf)

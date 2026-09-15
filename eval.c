@@ -20,9 +20,11 @@ typedef struct
     float x, y;
 } max_t;
 
-int main (void)
+int main (int argc, char *argv[])
 {
     max_t m = { 0, 0, 0, nanf(""), 0.0 };
+
+    bool out_ulp = argc > 1 && !strcasecmp (argv[1], "-out=ulp");
 
     for (ssize_t n_read;;)
     {
@@ -54,8 +56,19 @@ int main (void)
         free (line);
     }
 
-    printf ("eval: %d/%d: 0x%08x = %e -> %e\n",
-            m.n, m.num, m.xx, m.x, m.y);
+    printf ("eval: %d/%d: 0x%08x = %e -> ", m.n, m.num, m.xx, m.x);
+    if (out_ulp)
+        printf ("%.1f ulp", m.y);
+    else
+    {
+        printf ("%e", m.y);
+        if (m.y > 0 && !isnan (m.y))
+        {
+            printf ("  log10: %f", log10 (m.y));
+            printf ("  log2: %f", log2 (m.y));
+        }
+    }
+    printf ("\n");
     
     return EXIT_SUCCESS;
 }
