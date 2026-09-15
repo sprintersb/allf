@@ -3,12 +3,12 @@
 help:
 	@echo ""
 	@echo "Specifying the level of parallelization:"
-	@echo "    NUM=[1]         Level of parallelization."
+	@echo "    NUM=[1]         Level of parallelization and number of jobs."
 	@echo "Specifying the function under investigation:"
 	@echo "    FUNC=[logf]     Float function to investigate."
 	@echo "    LO=[0.5]        Lower / upper bound for the x values. It's"
 	@echo "    HI=[1-1]        a float value with an optional ULP addend."
-	@echo "    STEP=[1]        Only each step-th x will be investigated."
+	@echo "    STEP=[1]        Only each step-th x (ULP) will be investigated."
 	@echo "Specifying how the target program is compiled:"
 	@echo "    CC=[avr-gcc]    AVR compiler for the target program."
 	@echo "    MCU=[atmega128] AVR device under simulation."
@@ -17,7 +17,7 @@ help:
 	@echo "    AARGS=          Extra arguments for AVRtest."
 	@echo "    XARGS=          Extra arguments for the simulated program."
 	@echo "Example:"
-	@echo "    make clean ; nice -10 make eval -j2 NUM=2 LO=0.54 HI=0.55 FUNC=logf"
+	@echo "    make clean ; nice -10 make eval NUM=2 LO=0.54 HI=0.55 FUNC=logf"
 	@echo ""
 
 run: all.data
@@ -56,9 +56,14 @@ run.elf: run.c
 d-%.data : run.elf
 	avrtest -q ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) $(XARGS) > $@
 
-all.data: $(dats)
-	cat $^ > $@
-	cat $@
+.PHONY: all-data
+
+all.data: all-data
+
+all-data:
+	$(MAKE) -j$(NUM) $(dats)
+	cat $(dats) > all.data
+	cat all.data
 
 eval.x: eval.c
 	gcc $< -O -o $@ -std=c99 -Wall -Werror -lm
