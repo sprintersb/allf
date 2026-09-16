@@ -55,6 +55,10 @@ exit_o := $(AVRTEST_HOME)/exit-$(MCU).o
 run.elf: run.c
 	$(CC) $< -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(exit_o) $(FLT) -save-temps -dp -dumpbase "" -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 
+# What doesn't wor as expected is to gather stderr outputs in individual
+# files and then let a acript print them in an orderly manner.  What
+# doesn't work as expected is tee-ing stderr for /immediate/ output
+# of run.c messages like expected run time.
 d-%.data : run.elf
 	avrtest -q ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) -out=$(OUT) $(XARGS) > $@
 
