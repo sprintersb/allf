@@ -54,6 +54,7 @@ exit_o := $(AVRTEST_HOME)/exit-$(MCU).o
 
 run.elf: run.c
 	$(CC) $< -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(exit_o) $(FLT) -save-temps -dp -dumpbase "" -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
+	avr-objdump -d $@ > run.lst
 
 # What doesn't wor as expected is to gather stderr outputs in individual
 # files and then let a acript print them in an orderly manner.  What
@@ -78,4 +79,4 @@ eval: eval.x all.data
 	cat all.data | ./eval.x -out=$(OUT)
 
 clean:
-	rm -f $(wildcard *.[isox] *.data *.elf)
+	rm -f $(wildcard *.[isox] *.data *.elf *.lst)
