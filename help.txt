@@ -19,7 +19,7 @@ Custom parameters:
     NUM=[1]         Number of parallel jobs.
     STEP=[1]        Stride for x in units of ULPs.
 Example:
-    make clean ; nice -10 make delta NUM=2 LO=0.54 HI=0.55 FUNC=logf
+    nice -10 make delta NUM=2 LO=0.54 HI=0.55 FUNC=logf
 
 The plot.png and plot.svg targets
 =================================
@@ -31,4 +31,4 @@ Custom parameters:
     NX=[1000]       The number of equidistant x-values in [LO, HI].
     DIM=[850,500]   The size in pixels of the produced image.
 Example:
-    make clean ; make plot.svg LO='-1' HI='10' FUNC=expf
+    make plot.svg LO='-1' HI='10' FUNC=expf

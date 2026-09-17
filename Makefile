@@ -41,11 +41,11 @@ exit_o := $(AVRTEST_HOME)/exit-$(MCU).o
 
 CC_ARGS = -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(exit_o) -save-temps -dp
 
-delta.elf: delta.c
+delta.elf: delta.c force
 	$(CC) $< $(CC_ARGS) $(FLT) -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 	avr-objdump -d $@ > delta.lst
 
-plot.elf: plot.c config.h
+plot.elf: plot.c config.h force
 	$(CC) $< $(CC_ARGS) $(FLT) -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 	avr-objdump -d $@ > plot.lst
 
