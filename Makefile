@@ -37,32 +37,37 @@ $(info AVRTEST_HOME=$(AVRTEST_HOME))
 
 dats := $(foreach num,$(nums),d-$(num).data)
 
-exit_o := $(AVRTEST_HOME)/exit-$(MCU).o
+.PHONY: force
 
-CC_ARGS = -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) $(exit_o) -save-temps -dp
+exit_c = $(AVRTEST_HOME)/dejagnuboards/exit.c
 
-delta.elf: delta.c force
+exit.o: $(exit_c) force
+	$(CC) -mmcu=$(MCU) -std=gnu99 -Os $< -c -o $@ -I$(AVRTEST_HOME)
+
+CC_ARGS = -Os -mmcu=$(MCU) -o $@ -I$(AVRTEST_HOME) exit.o -save-temps -dp
+
+delta.elf: delta.c exit.o force
 	$(CC) $< $(CC_ARGS) $(FLT) -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 	avr-objdump -d $@ > delta.lst
 
-plot.elf: plot.c config.h force
+plot.elf: plot.c config.h exit.o force
 	$(CC) $< $(CC_ARGS) $(FLT) -DFUNC=$(FUNC) -DAFUNC=$(afunc) $(ARGS)
 	avr-objdump -d $@ > plot.lst
 
 config.h: gen-config.sh force
 	./$< $(FUNC) > $@
 
-force: ; @true
+avrtest_x = $(shell avrtest-elf $<) -q
 
 # What doesn't work as expected is to gather stderr outputs in individual
 # files and then let a script print them in an orderly manner.  What
 # doesn't work as expected is tee-ing stderr for /immediate/ output
 # of delta.c messages like expected run time.
 d-%.data : delta.elf
-	avrtest -q ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) -out=$(OUT) $(XARGS) > $@
+	$(avrtest_x) ./$< $(AARGS) -args -num=$(NUM) -n=$* -lo="$(LO)" -hi="$(HI)" -step=$(STEP) -out=$(OUT) $(XARGS) > $@
 
 plot.data : plot.elf
-	avrtest -q ./$< $(AARGS) -args -nx=$(NX) -lo="$(LO)" -hi="$(HI)" -out=$(OUT) $(XARGS) | grep '^==' | sed -e 's:^==::' > $@
+	$(avrtest_x) ./$< $(AARGS) -args -nx=$(NX) -lo="$(LO)" -hi="$(HI)" -out=$(OUT) $(XARGS) | grep '^==' | sed -e 's:^==::' > $@
 
 GPLOT_ARGS = -e pixx=\"$(PIXX)\" -e pixy=\"$(PIXY)\"
 
