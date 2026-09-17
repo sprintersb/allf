@@ -1,25 +1,34 @@
-The delta target
-================
-
-The delta target determines the maximal relative error of a float
-function like sinf over an interval [LO, HI] with ulp stride STEP.
-GNU make will issue NUM processes to work out the required data,
-which is then combined by a small C program.
-
-Specifying the level of parallelization:"
-    NUM=[1]         Level of parallelization and number of jobs.
-Specifying the function under investigation:
+Specifying the function to investigate:
     FUNC=[logf]     Float function to investigate.
     LO=[0.5]        Lower / upper bound for the x values. A float
     HI=[1-1]        value like inf with an optional ULP addend.
-    STEP=[1]        Only each step-th x (ULP) will be investigated.
     OUT=[float]     Output format: float or ulp.
-Specifying how the target program is compiled:
+How the target program is compiled:
     CC=[avr-gcc]    AVR compiler for the target program.
     MCU=[atmega128] AVR device under simulation.
     ARGS=           Extra arguments for the compiler.
-Specifying how the target program is being run:
-    AARGS=          Extra arguments for AVRtest.
-    XARGS=          Extra arguments for the simulated program.
+
+The delta target
+================
+
+Determine the maximal relative error of a float function
+FUNC over the interval [LO, HI] and with ulp stride STEP.
+GNU make will spawn NUM processes running AVRtest.
+
+Custom parameters:
+    NUM=[1]         Number of parallel jobs.
+    STEP=[1]        Stride for x in units of ULPs.
 Example:
     make clean ; nice -10 make delta NUM=2 LO=0.54 HI=0.55 FUNC=logf
+
+The plot.png and plot.svg targets
+=================================
+
+Let Gnuplot produce a PNG resp. SVG graphic of the relative error
+of a function FUNC over the interval [LO, HI].
+
+Custom parameters:
+    NX=[1000]       The number of equidistant x-values in [LO, HI].
+    DIM=[850,500]   The size in pixels of the produced image.
+Example:
+    make clean ; make plot.svg LO='-1' HI='10' FUNC=expf
