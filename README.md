@@ -25,7 +25,7 @@ long double&rarr;long double functions from math.h.
 
 ## The maximal relative Error
 
-The `delta` target can be ised to work out the maximal relative error
+The `delta` target can be used to work out the maximal relative error
 of a univariate floating point function from math.h.
 
 It calculates the relative error for every value x in the specified
@@ -33,7 +33,7 @@ interval with a given ULP stride.  For example, a stride of 1 will
 calculate the error for every x value in the interval.  This can be
 quite time consuming since the function has to be evaluated at
 up to 2<sup>32</sup> places.  To that end, the Makefile allows to
-run the calculations in parallel.  Here is an example with 2 processes:
+run the calculations in parallel.  Here is an example with NUM=2 processes:
 
 ```none
 $ nice -10 make delta NUM=2 LO=0.9 HI=1 STEP=1 FUNC=asinf
@@ -48,7 +48,8 @@ NUM=2: [9.000000e-01, 1.000000e+00] += 0x1
 eval: 0/2: 0x3f667136 = 9.001650e-01 -> 2.128456e-07  log10: -6.671935  log2: -22.163689
 ```
 So the maximal relative error is around 2.128&middot;10<sup>-7</sup>
-and is realized for a float value with hex representation 0x3f667136.
+and is realized for a float value with hex representation
+0x3f667136 &asymp; 9.001650&middot;10<sup>-1</sup>.
 
 ## Recognized Makefile Variables
 
